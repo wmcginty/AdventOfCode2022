@@ -47,14 +47,16 @@ struct Map: Pathfinding {
     let map: [Coordinate: UInt8]
     let start: Coordinate
     let end: Coordinate
+    let reversed: Bool
 
-    init(map: [Coordinate: UInt8], start: Coordinate, end: Coordinate) {
+    init(map: [Coordinate: UInt8], start: Coordinate, end: Coordinate, reversed: Bool) {
         self.map = map
         self.start = start
         self.end = end
+        self.reversed = reversed
     }
 
-    init(input: String) {
+    init(input: String, reversed: Bool = false) {
         var start = Coordinate(x: 0, y: 0)
         var end = Coordinate(x: 0, y: 0)
         var map = [Coordinate: UInt8]()
@@ -72,11 +74,16 @@ struct Map: Pathfinding {
                     copy = "z"
                 }
 
-                map[coordinate] = copy.asciiValue!
+                map[coordinate] = reversed ? ((122 - copy.asciiValue!) + 97) : copy.asciiValue!
             }
         }
 
-        self.init(map: map, start: start, end: end)
+        self.init(map: map, start: start, end: end, reversed: reversed)
+    }
+
+    var lowestElevation: UInt8 {
+        let min = map.map(\.value).min()!
+        return reversed ? ((122 - min) + 97) : min
     }
 
     func neighbors(for point: Coordinate) -> [Coordinate] {
@@ -100,7 +107,7 @@ class AStarPathfinder<Map: Pathfinding> {
     private final class PathNode: Comparable, CustomDebugStringConvertible {
         let coordinate: Coordinate
         let parent: PathNode?
-        
+
         let gScore: Int // Distance from start to node
         let hScore: Int // Heuristic distance from node to destination (using Manhattan distance)
         var fScore: Int { gScore + hScore }
@@ -131,7 +138,11 @@ class AStarPathfinder<Map: Pathfinding> {
         self.map = map
     }
 
-    func shortestPath(from start: Coordinate, to destination: Coordinate) -> [Coordinate] {
+    func shortestPath(from start: Coordinate, to end: Coordinate) -> [Coordinate]? {
+        return shortestPath(from: start, to: [end])
+    }
+
+    func shortestPath(from start: Coordinate, to ends: [Coordinate]) -> [Coordinate]? {
         var frontier = Heap<PathNode>()
         frontier.insert(PathNode(coordinate: start))
 
@@ -141,7 +152,7 @@ class AStarPathfinder<Map: Pathfinding> {
         while let currentNode = frontier.popMin() {
             let currentCoordinate = currentNode.coordinate
 
-            if currentCoordinate == destination {
+            if ends.contains(currentCoordinate) {
                 var result = [Coordinate]()
                 var node: PathNode? = currentNode
                 while let n = node {
@@ -155,7 +166,7 @@ class AStarPathfinder<Map: Pathfinding> {
                 let moveCost = map.costToMove(from: currentCoordinate, to: neighbor)
                 let newCost = currentNode.gScore + moveCost
 
-                if explored[neighbor] == nil || newCost <= explored[neighbor]! {
+                if explored[neighbor] == nil || explored[neighbor]! > newCost {
                     explored[neighbor] = newCost
                     let hScore = map.distance(from: currentCoordinate, to: neighbor)
                     let node = PathNode(coordinate: neighbor, parent: currentNode, moveCost: moveCost, hScore: hScore)
@@ -164,34 +175,30 @@ class AStarPathfinder<Map: Pathfinding> {
             }
         }
 
-        return []
+        return nil
     }
 }
 
 // MARK: - Part 1
-func countOfShortestPath(input: String) -> Int {
-    let heightMap = Map(input: input)
+func countOfShortestPath(input: String) -> Int? {
+    let heightMap = Map(input: input, reversed: false)
     let pathfinder = AStarPathfinder(map: heightMap)
-    let shortestPath = pathfinder.shortestPath(from: heightMap.start, to: heightMap.end)
-    return shortestPath.count
+    let shortestPath = pathfinder.shortestPath(from: heightMap.start, to: [heightMap.end])
+    return shortestPath?.count
 }
 
-print("Part 1: \(countOfShortestPath(input: input))")
+print("Part 1: \(String(describing: countOfShortestPath(input: input)))")
 
 
 // MARK: - Part 2
-func countOfShortestPathFromBottomToEnd(input: String) -> Int {
-    let heightMap = Map(input: input)
+func countOfShortestPathFromBottomToEnd(input: String) -> Int? {
+    let heightMap = Map(input: input, reversed: true)
     let pathfinder = AStarPathfinder(map: heightMap)
 
-    return heightMap.map
-        .filter { $0.value == Character("a").asciiValue! }
-        .lazy
-        .map { pathfinder.shortestPath(from: $0.key, to: heightMap.end).count }
-        .filter { $0 > 0 }
-        .min() ?? 0
+    let destinations = heightMap.map.filter { $0.value == heightMap.lowestElevation }.map(\.key)
+    return pathfinder.shortestPath(from: heightMap.end, to: destinations)?.count
 }
 
-print("Part 2: \(countOfShortestPathFromBottomToEnd(input: input))")
+print("Part 2: \(String(describing: countOfShortestPathFromBottomToEnd(input: input)))")
 
 //: [Next](@next)
