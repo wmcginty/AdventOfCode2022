@@ -6,20 +6,9 @@
 //
 
 import Foundation
+import AdventKit
 import Parsing
-
-let testInput = """
-Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
-Valve BB has flow rate=13; tunnels lead to valves CC, AA
-Valve CC has flow rate=2; tunnels lead to valves DD, BB
-Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
-Valve EE has flow rate=3; tunnels lead to valves FF, DD
-Valve FF has flow rate=0; tunnels lead to valves EE, GG
-Valve GG has flow rate=0; tunnels lead to valves FF, HH
-Valve HH has flow rate=22; tunnel leads to valve GG
-Valve II has flow rate=0; tunnels lead to valves AA, JJ
-Valve JJ has flow rate=21; tunnel leads to valve II
-"""
+import Collections
 
 struct Valve: Equatable {
     let name: String
@@ -27,7 +16,15 @@ struct Valve: Equatable {
     let connectedValveNames: [String]
 }
 
-let inputParser = Parse {
+struct State: Hashable {
+    var flowReleased: Int
+    var current: String
+    var opened: Set<String>
+    var otherPeople: Int
+    var time: Int
+}
+
+let valveParser = Parse {
     "Valve "
 
     Prefix(while: { $0 != " " })
@@ -47,68 +44,72 @@ let inputParser = Parse {
     Valve(name: String($0), flowRate: $1, connectedValveNames: $2.map(String.init))
 }
 
+let valvesParser = Many { valveParser } separator: { "\n" }
 
-class Graph<T> {
+func maximumFlowReleased(using valves: [String: Valve], inTotalTime totalTime: Int, withOtherPeople count: Int) -> Int {
+    var best = 0
+    let start = State(flowReleased: 0, current: "AA", opened: [], otherPeople: count, time: totalTime)
+    var deque = Deque([start])
+    var seen = Set<State>()
 
-    public class Vertex {
+    let allFlowingValves = Set(valves.values.filter { $0.flowRate > 0 }.map(\.name))
 
-        var value: T
-        var neighbors: [Edge] = []
+    while let status = deque.popFirst() {
+        best = max(best, status.flowReleased)
 
-        init(value: T) {
-            self.value = value
+        if status.time == 0 {
+            // if we've got no time left, but we do have players left, pass it on
+            guard status.otherPeople > 0 else { continue }
+            deque.append(.init(flowReleased: status.flowReleased, current: "AA", opened: status.opened, otherPeople: status.otherPeople - 1, time: totalTime))
         }
 
-        func addNeighbor(_ vertex: Vertex, weight: Int) {
-            neighbors.append(.init(neighbor: vertex, weight: weight))
-        }
-    }
-
-    public class Edge {
-        var neighbor: Vertex
-        var weight: Int
-
-        init(neighbor: Vertex, weight: Int) {
-            self.neighbor = neighbor
-            self.weight = weight
+        if status.opened == allFlowingValves {
+            continue
         }
 
-    }
+        if seen.contains(status) {
+            continue
+        }
 
-    private(set) var canvas: [Vertex]
+        seen.insert(status)
+        let currentValve = valves[status.current]!
 
-    init() {
-        canvas = []
-    }
+        // if we have not visited this valve, and it will help to open it, lets open it
+        if currentValve.flowRate > 0 && !status.opened.contains(currentValve.name){
+            deque.append(State(flowReleased: status.flowReleased + ((status.time - 1) * (currentValve.flowRate)), current: status.current,
+                               opened: status.opened.union([status.current]), otherPeople: status.otherPeople, time: status.time - 1))
+        }
 
-    convenience init(valves: [T]) where T == Valve {
-        self.init()
-
-        for valve in valves {
-            let vertex = Vertex(value: valve)
-            addVertex(vertex)
-
-            let connectedValves = valve.connectedValveNames.compactMap { name in valves.first(where: { $0.name == name }) }
-            for neighboringValve in connectedValves {
-                let neighbor = Vertex(value: neighboringValve)
-                addEdge(from: vertex, to: neighbor, weight: 1)
+        // travel to each neighbor
+        if status.time >= 1 {
+            for neighbor in currentValve.connectedValveNames {
+                deque.append(.init(flowReleased: status.flowReleased, current: neighbor, opened: status.opened, otherPeople: status.otherPeople, time: status.time - 1))
             }
         }
     }
 
-    func addVertex(_ vertex: Vertex) {
-        canvas.append(vertex)
-    }
-
-    func addEdge(from vertex: Vertex, to other: Vertex, weight: Int) {
-        vertex.addNeighbor(other, weight: weight)
-    }
+    return best
 }
 
-// MARK: - Part 1
-func part1(from input: String) throws -> Void {
-    let valves = try Many { inputParser } separator: { "\n" }.parse(input)
-    var graph = Graph<Valve>(valves: valves)
+//// MARK: - Part 1
+func maximumFlowReleasedbySelf(from input: String) throws -> Int {
+    let valves = try valvesParser.parse(input)
+    let maxFlow = maximumFlowReleased(using: Dictionary(uniqueKeysWithValues: valves.map { ($0.name, $0) }), inTotalTime: 30, withOtherPeople: 0)
+    return maxFlow
 }
 
-try part1(from: testInput)
+try measure(part: .one) {
+    print("Solution: \(try maximumFlowReleasedbySelf(from: .testInput))")
+}
+
+// MARK: - Part 2
+// Warning: It takes a really long time. Could/should/definitely be optimized.
+func maximumFlowReleasedWithElephant(from input: String) throws -> Int {
+    let valves = try valvesParser.parse(input)
+    let maxFlow = maximumFlowReleased(using: Dictionary(uniqueKeysWithValues: valves.map { ($0.name, $0) }), inTotalTime: 26, withOtherPeople: 1)
+    return maxFlow
+}
+
+try measure(part: .two) {
+    print("Solution: \(try maximumFlowReleasedWithElephant(from: .input))")
+}
