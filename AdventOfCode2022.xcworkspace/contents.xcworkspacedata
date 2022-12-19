@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:Day19/Day19.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day16/Day16.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day15/Day15.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day14/Day14.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day13/Day13.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day12/Day12.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day11/Day11.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day10/Day10.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day9/Day9.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day8/Day8.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day7/Day7.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day6/Day6.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day5/Day5.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day4/Day4.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day3/Day3.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day2/Day2.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Day1/Day1.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:AdventKit">
+   </FileRef>
+</Workspace>
