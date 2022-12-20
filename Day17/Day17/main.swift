@@ -106,13 +106,13 @@ class Chamber {
     }
 
     func isPlacementPossible(for piece: Piece) -> Bool {
-        piece.coordinates.allSatisfy { (0...width - 1) ~= $0.x && contents[$0] == nil }
+        piece.coordinates.allSatisfy { (0..<width) ~= $0.x && contents[$0] == nil }
     }
 
-    // highest point in every column, normalized so that the lowest point is at y==0
+    // Highest point in every column, normalized so that the lowest point is at y == 0
     func skyline() -> [Coordinate] {
         var maxY = Int.min
-        let points = (0...(width - 1)).map { x in
+        let points = (0..<width).map { x in
             let y = highYs[x]
             maxY = max(maxY, y)
             return Coordinate(x: x, y: y)
@@ -146,13 +146,33 @@ class Tetris {
         }
     }
 
-    func play(in chamber: Chamber, until: (Chamber) -> Bool) {
-        while true {
+    func playARidiculousAmount(exactly times: Int, in chamber: Chamber) -> Int {
+        let target = times - 1
+        var seenStates: [Status: (Int, Int)] = [:] // [Status: (rocksFallen, accumulatedHeight)]
+
+        for rockCount in 0..<Int.max {
             play(in: chamber)
-            if until(chamber) {
-                break
+
+            // After every play, check the combination of next piece, next jet and the board to see if it's a state we've seen before.
+            let status = Status(pieceIndex: pieceIndex, jetIndex: jetIndex, skyline: chamber.skyline())
+            if let (start, height) = seenStates[status] {
+
+                // If we've seen this state before, we can skip ahead and not have to play every rock
+                let gained = chamber.accumulatedHeight - height //How much height has been gained since then?
+                let loopLength = rockCount - start // How many rocks have been dropped since then?
+                let loopCount = (target - start) / loopLength // In order to get from the previous seen state to the end goal, how many times will we need to repeat?
+                let remainingToTarget = (target - start) - (loopLength * loopCount) // How many rocks are left to fall before we reach the end goal
+
+                (0..<remainingToTarget).forEach { _ in
+                    play(in: chamber)
+                }
+
+                return chamber.accumulatedHeight + ((loopCount - 1) * gained)
             }
+            seenStates[status] = (rockCount, chamber.accumulatedHeight)
         }
+
+        return 0
     }
 
     func play(in chamber: Chamber) {
@@ -205,56 +225,16 @@ func heightOfTetris(after rocks: Int, from input: String) -> Int {
 
 measure(part: .one) {
     print("Solution: \(heightOfTetris(after: 2022, from: .input))")
-
 }
 
 //// MARK: - Part 2
-//func heightOfTetris(afterMany rocks: Int, from input: String) -> Int {
-//    let tetris = Tetris(jets: input.compactMap { Jet(rawValue: String($0)) })
-//    let chamber = Chamber()
-//
-//    var seen: [Tetris.Status: (Int, Int)] = [:]
-//    tetris.play(in: chamber) { chamber in
-//        let status = Tetris.Status(pieceIndex: tetris.pieceIndex, jetIndex: tetris.jetIndex, skyline: chamber.skyline())
-//        if let (start, height) = seen[status] {
-//
-//        }
-//
-//        seen[status] = (0, chamber.accumulatedHeight)
-//
-//        return false
-//    }
-//
-//}
+func heightOfTetris(afterMany rocks: Int, from input: String) -> Int {
+    let tetris = Tetris(jets: input.compactMap { Jet(rawValue: String($0)) })
+    let chamber = Chamber()
 
-//    func part2() -> Int {
-//        jetIndex = 0
-//        shapeIndex = 0
-//        let rocks = 1_000_000_000_000 - 1
-//        var seen = [Key: (Int, Int)]()
-//
-//        var pc = 0
-//
-//        var playfield = Chamber()
-//        for block in 0..<Int.max {
-//            playTetris(in: &playfield)
-//            pc += 1
-//            let key = Key(skyline: playfield.skyline(), shapeIndex: shapeIndex, jetIndex: jetIndex)
-//            if let (start, height) = seen[key] {
-//                let heightGain = playfield.accumulatedHeight - height
-//                let loopLen = block - start
-//                let loops = (rocks - start) / loopLen
-//                let remainder = (rocks - start) - (loops * loopLen)
-//                for _ in 0..<remainder {
-//                    playTetris(in: &playfield)
-//                    pc += 1
-//                }
-//
-//                // -1 loops because we've stopped at the end of the first
-//                return playfield.accumulatedHeight + ((loops - 1) * heightGain)
-//            }
-//            seen[key] = (block, playfield.accumulatedHeight)
-//        }
-//
-//        return 0
-//    }
+    return tetris.playARidiculousAmount(exactly: rocks, in: chamber)
+}
+
+measure(part: .two) {
+    print("Solution: \(heightOfTetris(afterMany: 1_000_000_000_000, from: .input))")
+}
