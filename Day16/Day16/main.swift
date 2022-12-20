@@ -93,27 +93,15 @@ class Solver {
     }
 }
 
-// MARK: - Part 1
-func maximumFlowReleasedbySelf(from input: String) throws -> Int {
-    let valves = try valvesParser.parse(input).enumerated().map { IndexedValve(index: $0.offset, valve: $0.element) }
-    
-    let solver = Solver(valveDict: Dictionary(uniqueKeysWithValues: valves.map { ($0.name, $0) }))
-    return solver.maxFlowReleasable(at: "AA", afterOpening: [], timeRemaining: 30, maximumTime: 30, otherPlayers: 0)
-}
+let valves = try valvesParser.parse(String.input).enumerated().map { IndexedValve(index: $0.offset, valve: $0.element) }
+let solver = Solver(valveDict: Dictionary(uniqueKeysWithValues: valves.map { ($0.name, $0) }))
 
-try measure(part: .one) {
-    print("Solution: \(try maximumFlowReleasedbySelf(from: .input))")
+// MARK: - Part 1
+measure(part: .one) {
+    print("Solution: \(solver.maxFlowReleasable(at: "AA", afterOpening: [], timeRemaining: 30, maximumTime: 30, otherPlayers: 0))")
 }
 
 // MARK: - Part 2
-// Warning: It takes ~6.5 minutes. But it WORKS.
-func maximumFlowReleasedWithElephant(from input: String) throws -> Int {
-    let valves = try valvesParser.parse(input).enumerated().map { IndexedValve(index: $0.offset, valve: $0.element) }
-    
-    let solver = Solver(valveDict: Dictionary(uniqueKeysWithValues: valves.map { ($0.name, $0) }))
-    return solver.maxFlowReleasable(at: "AA", afterOpening: [], timeRemaining: 26, maximumTime: 26, otherPlayers: 1)
-}
-
-try measure(part: .two) {
-    print("Solution: \(try maximumFlowReleasedWithElephant(from: .input))")
+measure(part: .two) {
+    print("Solution: \(solver.maxFlowReleasable(at: "AA", afterOpening: [], timeRemaining: 26, maximumTime: 26, otherPlayers: 1))")
 }
