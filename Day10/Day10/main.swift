@@ -68,7 +68,6 @@ let interestingCycleNumbers = [20, 60, 100, 140, 180, 220]
 let interestingSignalStrength = interestingCycleNumbers.map { cpu.signalStrength(duringCycleNumber: $0) }.reduce(0, +)
 print("Part 1: \(interestingSignalStrength)")
 
-
 // MARK: - Part 2
 class CRT {
     let width, height: Int

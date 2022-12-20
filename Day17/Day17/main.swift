@@ -13,30 +13,6 @@ enum Jet: String {
     case right = ">"
 }
 
-struct Coordinate: Hashable {
-    let x, y: Int
-
-    enum Direction {
-        case up, left, right, down
-    }
-
-    func moved(in direction: Direction, amount: Int) -> Coordinate {
-        switch direction {
-        case .up: return Coordinate(x: x, y: y - amount)
-        case .left: return Coordinate(x: x - amount, y: y)
-        case .right: return Coordinate(x: x + amount, y: y)
-        case .down: return Coordinate(x: x, y: y + amount)
-        }
-    }
-
-    func line(to end: Coordinate) -> [Coordinate] {
-        let dX = (end.x - x).signum()
-        let dY = (end.y - y).signum()
-        let range = max(abs(x - end.x), abs(y - end.y))
-        return (0..<range).map { Coordinate(x: x + dX * $0, y: y + dY * $0) }
-    }
-}
-
 struct Piece: CaseIterable {
 
     let coordinates: [Coordinate] //top left = (0,0)

@@ -24,7 +24,6 @@ struct IndexedValve: Hashable {
     var connectedValveNames: [String] { valve.connectedValveNames }
 }
 
-
 let valveParser = Parse {
     "Valve "
     Prefix(while: { $0 != " " })

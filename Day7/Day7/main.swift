@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AdventKit
 import Parsing
 
 enum Input {
@@ -21,29 +22,6 @@ enum Command {
 enum Contents: Equatable {
     case directory(String)
     case file(String, UInt)
-}
-
-public class TreeNode<T> {
-    public var value: T
-    public var children: [TreeNode] = []
-    public weak var parent: TreeNode?
-
-    public init(_ value: T) {
-        self.value = value
-    }
-
-    public func add(_ value: T) {
-        let child = TreeNode(value)
-        child.parent = self
-        children.append(child)
-    }
-
-    public func depthFirstTraversal(visit: (TreeNode) -> Void) {
-        visit(self)
-        children.forEach {
-            $0.depthFirstTraversal(visit: visit)
-        }
-    }
 }
 
 let changeDirectoryParse = Parse {

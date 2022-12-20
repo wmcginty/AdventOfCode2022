@@ -6,12 +6,9 @@
 //
 
 import Foundation
+import AdventKit
 import Algorithms
 import Parsing
-
-struct Coordinate: Hashable {
-    let x,y: Int
-}
 
 struct Path {
     let coordinates: [Coordinate]
@@ -137,7 +134,9 @@ func unitsOfSand(from input: String) throws -> Int {
     return cave.fallenSandCount
 }
 
-print("Part 1: \(try unitsOfSand(from: .input))")
+try measure(part: .one) {
+    print("Solution: \(try unitsOfSand(from: .input))")
+}
 
 
 // MARK: - Part 2
@@ -150,5 +149,9 @@ func unitsOfSandUntilEntryBlocked(from input: String) throws -> Int {
     return cave.fallenSandCount
 }
 
-print("Part 2: \(try unitsOfSandUntilEntryBlocked(from: .input))")
+try measure(part: .two) {
+    print("Solution: \(try unitsOfSandUntilEntryBlocked(from: .input))")
+}
+
+
 

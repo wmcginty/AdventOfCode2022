@@ -6,35 +6,7 @@
 //
 
 import Foundation
-import Collections
-
-struct Coordinate: Hashable, CustomStringConvertible {
-    let x, y: Int
-
-    init(x: Int, y: Int) {
-        self.x = x
-        self.y = y
-    }
-
-    var description: String { return "\(x),\(y)" }
-
-    func neighbors() -> [Coordinate] {
-        return [.init(x: x + 1, y: y),
-                .init(x: x - 1, y: y),
-                .init(x: x, y: y + 1),
-                .init(x: x, y: y - 1)]
-    }
-
-    func distance(to point: Coordinate) -> Int {
-        return abs(x - point.x) + abs(y - point.y) // Manhattan distance
-    }
-}
-
-protocol Pathfinding {
-    func neighbors(for point: Coordinate) -> [Coordinate]
-    func costToMove(from: Coordinate, to: Coordinate) -> Int
-    func distance(from: Coordinate, to: Coordinate) -> Int
-}
+import AdventKit
 
 struct Map: Pathfinding {
 
@@ -92,84 +64,7 @@ struct Map: Pathfinding {
     }
 
     func distance(from: Coordinate, to: Coordinate) -> Int {
-        return from.distance(to: to)
-    }
-}
-
-class AStarPathfinder<Map: Pathfinding> {
-
-    private final class PathNode: Comparable, CustomDebugStringConvertible {
-        let coordinate: Coordinate
-        let parent: PathNode?
-
-        let gScore: Int // Distance from start to node
-        let hScore: Int // Heuristic distance from node to destination (using Manhattan distance)
-        var fScore: Int { gScore + hScore }
-
-        init(coordinate: Coordinate, parent: PathNode? = nil, moveCost: Int = 0, hScore: Int = 0) {
-            self.coordinate = coordinate
-            self.parent = parent
-            self.gScore = (parent?.gScore ?? 0) + moveCost
-            self.hScore = hScore
-        }
-
-        static func == (lhs: PathNode, rhs: PathNode) -> Bool {
-            lhs.coordinate == rhs.coordinate
-        }
-
-        static func < (lhs: PathNode, rhs: PathNode) -> Bool {
-            lhs.fScore < rhs.fScore
-        }
-
-        var debugDescription: String {
-            "pos=\(coordinate) g=\(gScore) h=\(hScore) f=\(fScore)"
-        }
-    }
-
-    private let map: Map
-
-    init(map: Map) {
-        self.map = map
-    }
-
-    func shortestPath(from start: Coordinate, to end: Coordinate) -> [Coordinate]? {
-        return shortestPath(from: start, to: [end])
-    }
-
-    func shortestPath(from start: Coordinate, to ends: [Coordinate]) -> [Coordinate]? {
-        var frontier = Heap<PathNode>()
-        frontier.insert(PathNode(coordinate: start))
-
-        var explored = [Coordinate: Int]()
-        explored[start] = 0
-
-        while let currentNode = frontier.popMin() {
-            let currentCoordinate = currentNode.coordinate
-
-            if ends.contains(currentCoordinate) {
-                var result = [Coordinate]()
-                var node: PathNode? = currentNode
-                while let n = node {
-                    result.append(n.coordinate)
-                    node = n.parent
-                }
-                return Array(result.reversed().dropFirst())
-            }
-
-            for neighbor in map.neighbors(for: currentCoordinate) {
-                let moveCost = map.costToMove(from: currentCoordinate, to: neighbor)
-                let newCost = currentNode.gScore + moveCost
-
-                if explored[neighbor] == nil || explored[neighbor]! > newCost {
-                    explored[neighbor] = newCost
-                    let hScore = map.distance(from: currentCoordinate, to: neighbor)
-                    let node = PathNode(coordinate: neighbor, parent: currentNode, moveCost: moveCost, hScore: hScore)
-                    frontier.insert(node)
-                }
-            }
-        }
-
-        return nil
+        return from.manhattanDistance(to: to)
     }
 }
 
@@ -181,8 +76,9 @@ func countOfShortestPath(input: String) -> Int? {
     return shortestPath?.count
 }
 
-print("Part 1: \(String(describing: countOfShortestPath(input: .input)))")
-
+measure(part: .one) {
+    print("Solution: \(String(describing: countOfShortestPath(input: .input)))")
+}
 
 // MARK: - Part 2
 func countOfShortestPathFromBottomToEnd(input: String) -> Int? {
@@ -193,5 +89,8 @@ func countOfShortestPathFromBottomToEnd(input: String) -> Int? {
     return pathfinder.shortestPath(from: heightMap.end, to: destinations)?.count
 }
 
-print("Part 2: \(String(describing: countOfShortestPathFromBottomToEnd(input: .input)))")
+measure(part: .two) {
+    print("Solution: \(String(describing: countOfShortestPathFromBottomToEnd(input: .input)))")
+
+}
 

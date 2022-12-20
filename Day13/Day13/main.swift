@@ -6,24 +6,9 @@
 //
 
 import Foundation
+import AdventKit
 import Algorithms
 import Parsing
-
-// MARK: - Array + Comparable
-extension Array: Comparable where Element: Comparable {
-
-    public static func < (lhs: [Element], rhs: [Element]) -> Bool {
-        for (leftElement, rightElement) in zip(lhs, rhs) {
-            if leftElement < rightElement {
-                return true
-            } else if leftElement > rightElement {
-                return false
-            }
-        }
-
-        return lhs.count < rhs.count
-    }
-}
 
 struct Packet: Comparable {
 

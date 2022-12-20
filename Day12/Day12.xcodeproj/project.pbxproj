@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		0E7C33112951003C00090189 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E7C33102951003C00090189 /* main.swift */; };
 		0E7C339A2951019700090189 /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E7C33992951019700090189 /* Input.swift */; };
-		0EBEBFCE295105D60038B389 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 0EBEBFCD295105D60038B389 /* Collections */; };
+		0EC0BB49295257FB0071C3B2 /* AdventKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0EC0BB48295257FB0071C3B2 /* AdventKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,7 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0EBEBFCE295105D60038B389 /* Collections in Frameworks */,
+				0EC0BB49295257FB0071C3B2 /* AdventKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +47,7 @@
 			children = (
 				0E7C330F2951003C00090189 /* Day12 */,
 				0E7C330E2951003C00090189 /* Products */,
+				0EC0BB47295257FB0071C3B2 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -67,6 +68,13 @@
 			path = Day12;
 			sourceTree = "<group>";
 		};
+		0EC0BB47295257FB0071C3B2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -84,7 +92,7 @@
 			);
 			name = Day12;
 			packageProductDependencies = (
-				0EBEBFCD295105D60038B389 /* Collections */,
+				0EC0BB48295257FB0071C3B2 /* AdventKit */,
 			);
 			productName = Day12;
 			productReference = 0E7C330D2951003C00090189 /* Day12 */;
@@ -115,7 +123,6 @@
 			);
 			mainGroup = 0E7C33042951003C00090189;
 			packageReferences = (
-				0EBEBFCC295105D60038B389 /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			productRefGroup = 0E7C330E2951003C00090189 /* Products */;
 			projectDirPath = "";
@@ -293,22 +300,10 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		0EBEBFCC295105D60038B389 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-collections.git";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
-		0EBEBFCD295105D60038B389 /* Collections */ = {
+		0EC0BB48295257FB0071C3B2 /* AdventKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 0EBEBFCC295105D60038B389 /* XCRemoteSwiftPackageReference "swift-collections" */;
-			productName = Collections;
+			productName = AdventKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

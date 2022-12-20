@@ -10,6 +10,7 @@
 		0E7C334A2951005300090189 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E7C33492951005300090189 /* main.swift */; };
 		0E7C33942951018D00090189 /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E7C33932951018D00090189 /* Input.swift */; };
 		0EBEBFDD295106A40038B389 /* Parsing in Frameworks */ = {isa = PBXBuildFile; productRef = 0EBEBFDC295106A40038B389 /* Parsing */; };
+		0EC0BB40295257520071C3B2 /* AdventKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0EC0BB3F295257520071C3B2 /* AdventKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -36,6 +37,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0EBEBFDD295106A40038B389 /* Parsing in Frameworks */,
+				0EC0BB40295257520071C3B2 /* AdventKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +49,7 @@
 			children = (
 				0E7C33482951005300090189 /* Day15 */,
 				0E7C33472951005300090189 /* Products */,
+				0EC0BB3E295257520071C3B2 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -67,6 +70,13 @@
 			path = Day15;
 			sourceTree = "<group>";
 		};
+		0EC0BB3E295257520071C3B2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -85,6 +95,7 @@
 			name = Day15;
 			packageProductDependencies = (
 				0EBEBFDC295106A40038B389 /* Parsing */,
+				0EC0BB3F295257520071C3B2 /* AdventKit */,
 			);
 			productName = Day15;
 			productReference = 0E7C33462951005300090189 /* Day15 */;
@@ -309,6 +320,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0EBEBFDB295106A40038B389 /* XCRemoteSwiftPackageReference "swift-parsing" */;
 			productName = Parsing;
+		};
+		0EC0BB3F295257520071C3B2 /* AdventKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AdventKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
