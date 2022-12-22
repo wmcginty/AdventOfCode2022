@@ -13,6 +13,7 @@ struct Grid: CustomStringConvertible {
     struct Coordinate: CustomStringConvertible {
         let x, y: Int
 
+    
         var description: String {
             return "(\(x), \(y))"
         }
