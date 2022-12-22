@@ -20,6 +20,7 @@ enum Move {
     case moveForward(Int)
     case turn(Turn)
 
+    // Reduce large moves into smaller moves for path tracing
     func normalized() -> [Move] {
         switch self {
         case .turn(let turn): return [.turn(turn)]
@@ -29,9 +30,12 @@ enum Move {
 }
 
 struct Coordinate: Equatable, CustomStringConvertible {
+
+    // MARK: - Properties
     let row: Int
     let col: Int
 
+    // MARK: - Interface
     func line(to end: Coordinate) -> [Coordinate] {
         let dCol = (end.col - col).signum()
         let dRow = (end.row - row).signum()
@@ -48,6 +52,7 @@ struct Coordinate: Equatable, CustomStringConvertible {
         }
     }
 
+    // MARK: - CustomStringConvertible
     var description: String {
         return "(\(col), \(row))"
     }
@@ -70,21 +75,21 @@ struct Player: CustomStringConvertible {
         }
 
         // MARK: - CustomStringConvertible
-        var description: String {
-            switch self {
-            case .up: return "^"
-            case .down: return "v"
-            case .left: return "<"
-            case .right: return ">"
-            }
-        }
-
         var intValue: Int {
             switch self {
             case .up: return 3
             case .down: return 1
             case .left: return 2
             case .right: return 0
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .up: return "^"
+            case .down: return "v"
+            case .left: return "<"
+            case .right: return ">"
             }
         }
     }
@@ -96,14 +101,10 @@ struct Player: CustomStringConvertible {
     // MARK: - Interface
     mutating func applying(moveAmount: Int) {
         switch direction {
-        case .right:
-            coordinate = .init(row: coordinate.row + moveAmount, col: coordinate.col)
-        case .left:
-            coordinate = .init(row: coordinate.row - moveAmount, col: coordinate.col)
-        case .up:
-            coordinate = .init(row: coordinate.row, col: coordinate.col - moveAmount)
-        case .down:
-            coordinate = .init(row: coordinate.row, col: coordinate.col + moveAmount)
+        case .right: coordinate = .init(row: coordinate.row + moveAmount, col: coordinate.col)
+        case .left: coordinate = .init(row: coordinate.row - moveAmount, col: coordinate.col)
+        case .up: coordinate = .init(row: coordinate.row, col: coordinate.col - moveAmount)
+        case .down: coordinate = .init(row: coordinate.row, col: coordinate.col + moveAmount)
         }
     }
 
@@ -117,9 +118,10 @@ struct Player: CustomStringConvertible {
     }
 }
 
+// MARK: - [[Map.Contents]] + Convenience
 extension [[Map.Contents]] {
 
-    func squared() -> [[Map.Contents]] {
+    func squaredOff() -> [[Map.Contents]] {
         let maxColumns = self.map(\.count).max() ?? 0
         return self.indices.map { row in
             if self[row].count < maxColumns {
@@ -136,7 +138,7 @@ extension [[Map.Contents]] {
     }
 
     var startPosition: Coordinate {
-        guard let column = self[0].firstIndex(where: { $0.isWalkable }) else { fatalError("There is no where to start on this map") }
+        guard let column = self[0].firstIndex(where: { $0.isWalkable }) else { fatalError("There is nowhere to start on this map") }
         return Coordinate(row: 0, col: column)
     }
 }
@@ -149,6 +151,11 @@ struct Map: CustomStringConvertible {
         case floor = "."
         case wall = "#"
 
+        // MARK: - Initializer
+        init?(character: Character) {
+            self.init(rawValue: String(character))
+        }
+
         // MARK: - Interface
         var isVoid: Bool {
             switch self {
@@ -158,10 +165,7 @@ struct Map: CustomStringConvertible {
         }
 
         var isNotVoid: Bool {
-            switch self {
-            case .void: return false
-            default: return true
-            }
+            return !isVoid
         }
 
         var isWalkable: Bool {
@@ -170,20 +174,16 @@ struct Map: CustomStringConvertible {
             default: return false
             }
         }
-
-        init?(character: Character) {
-            self.init(rawValue: String(character))
-
-//            if self == .wall {
-//                self = .floor
-//            }
-        }
     }
 
+    // MARK: - Map.Portal
     struct Portal {
+
+        // MARK: - Properties
         let canGoThrough: (Player, Map) -> Bool
         let playerChanger: (Player, Map) -> Player
 
+        // MARK: - Interface
         func canGoThrough(with player: Player, in map: Map) -> Bool {
             return canGoThrough(player, map)
         }
@@ -197,20 +197,15 @@ struct Map: CustomStringConvertible {
             }
         }
 
-        static func from(source: Coordinate, to destination: Coordinate, startDirection: Player.Direction, endDirection: Player.Direction, ignoreDirection: Bool = false) -> Portal {
+        // MARK: - Preset
+        static func from(source: Coordinate, to destination: Coordinate, startDirection: Player.Direction, endDirection: Player.Direction) -> Portal {
             return Portal { player, map in
                 guard player.coordinate == source && player.direction == startDirection else { return false }
-                print("found portal at: \(player.coordinate) to \(destination)")
-
-                if ignoreDirection {
-                    return true
-                }
 
                 let proposedNext = player.coordinate.moved(by: 1, in: player.direction)
                 return !map.isCoordinateInBounds(proposedNext) || map.contents(at: proposedNext).isVoid
 
             } playerChanger: { player, map in
-                print("Moving player from: \(source) to: \(destination)")
                 return Player(coordinate: destination, direction: endDirection)
             }
         }
@@ -218,11 +213,11 @@ struct Map: CustomStringConvertible {
 
     enum PortalCreationMode {
         case automatic2D
-        case manual([Portal])
+        case none
 
         func create(in map: Map) -> [Portal] {
             switch self {
-            case .manual(let portals): return portals
+            case .none: return []
             case .automatic2D:
                 let oneBigWeirdlyEdgeShapedPortal = Portal { player, map in
                     let proposedNext = player.coordinate.moved(by: 1, in: player.direction)
@@ -258,24 +253,11 @@ struct Map: CustomStringConvertible {
     var portals: [Portal] = []
     var player: Player
 
-    struct Footstep {
-        let coordinate: Coordinate
-        let direction: Player.Direction
-
-        init(player: Player) {
-            self.coordinate = player.coordinate
-            self.direction = player.direction
-        }
-    }
-
-    private var footsteps: [Footstep] = []
-
     // MARK: - Initializer
     init(mapContents: [[Contents]], portalCreationMode: PortalCreationMode) {
-        self.contents = mapContents.squared()
+        self.contents = mapContents.squaredOff()
         self.player = .init(coordinate: mapContents.startPosition, direction: .right)
         self.portals = portalCreationMode.create(in: self)
-        footsteps = [.init(player: player)]
     }
 
     // MARK: - Interface
@@ -303,8 +285,6 @@ struct Map: CustomStringConvertible {
     }
 
     mutating func processPlayer(move: Move) {
-//        print("Processing move: \(move)")
-        
         switch move {
         case .turn(let turn): player.direction.applying(turn: turn)
         case .moveForward(let amount):
@@ -312,19 +292,16 @@ struct Map: CustomStringConvertible {
             // Move forward until you either hit a wall, or an edge of the map
             let (distance, walkableCoordinate) = walkableDestinationCoordinate(for: player, movingMaximumAmount: amount)
             player.coordinate = walkableCoordinate
-            footsteps.append(.init(player: player))
 
             // If there is still distance you could still walk forward, check for portals
             if distance < amount {
                 if let travellablePortal = portals.first(where: { $0.canGoThrough(with: player, in: self) }) {
                     // If there is a portal you can travel through, travel through it
                     travellablePortal.goThrough(with: &player, in: self)
-                    footsteps.append(.init(player: player))
 
                     // If there's still distance you can walk, start walking again
                     let (_, walkableCoordinate) = walkableDestinationCoordinate(for: player, movingMaximumAmount: amount - distance - 1)
                     player.coordinate = walkableCoordinate
-                    footsteps.append(.init(player: player))
                 }
             }
         }
@@ -356,9 +333,7 @@ struct Map: CustomStringConvertible {
             for col in contents[row].indices {
                 if player.coordinate.row == row && player.coordinate.col == col {
                     result += player.description
-                } /*else if let footstep = footsteps.first(where: { $0.coordinate == .init(row: row, col: col) }) {
-                    result += footstep.direction.description
-                }*/ else {
+                } else {
                     result += contents[row][col].rawValue
                 }
             }
@@ -383,24 +358,24 @@ let moveParser = Parse {
 let movesParser = Many { moveParser } terminator: { Whitespace() }
 
 // MARK: - Helper
-func prepareMapAndMoves(from input: String) throws -> (Map, [Move]) {
+func prepareMapAndMoves(from input: String, with portalCreationMode: Map.PortalCreationMode) throws -> (Map, [Move]) {
     let inputs = input.split(separator: "\n\n")
     let mapContents = inputs[0].components(separatedBy: .newlines).map { $0.compactMap(Map.Contents.init) }
     let instructions = try movesParser.parse(inputs[1])
 
-    return (Map(mapContents: mapContents, portalCreationMode: .automatic2D), instructions)
+    return (Map(mapContents: mapContents, portalCreationMode: portalCreationMode), instructions)
 }
 
 //// MARK: - Part 1
-//func finalPassword(from input: String) throws -> Int {
-//    var (map, moves) = try prepareMapAndMoves(from: input)
-//    map.processPlayer(moves: moves, visualize: false)
-//    return map.player.password
-//}
-//
-//try measure(part: .one) {
-//    print("Solution: \(try finalPassword(from: .input))") // 126350
-//}
+func finalPassword(from input: String) throws -> Int {
+    var (map, moves) = try prepareMapAndMoves(from: input, with: .automatic2D)
+    map.processPlayer(moves: moves, visualize: false)
+    return map.player.password
+}
+
+try measure(part: .one) {
+    print("Solution: \(try finalPassword(from: .input))") // 126350
+}
 
 // MARK: - Part 2
 
@@ -655,11 +630,6 @@ func onePortals() -> [Map.Portal] {
     let leftPortals = zip(oneEdges.leftColumn, fourEdges.leftColumn.reversed()).map { Map.Portal.from(source: $0.0, to: $0.1, startDirection: .left, endDirection: .right) }
     let rightPortals = zip(oneEdges.rightColumn, twoEdges.leftColumn).map { Map.Portal.from(source: $0.0, to: $0.1, startDirection: .right, endDirection: .right) }
 
-
-    for x in zip(oneEdges.leftColumn, fourEdges.leftColumn.reversed()) {
-        print(x)
-    }
-
     return topPortals + bottomPortals + leftPortals + rightPortals
 }
 
@@ -766,7 +736,7 @@ func sixPortals() -> [Map.Portal] {
 //  199 ------ 49 ------ 99 ------ 149 ------ 199
 
 func finalPasswordFor3DCube(with input: String) throws -> Int {
-    var (map, moves) = try prepareMapAndMoves(from: input)
+    var (map, moves) = try prepareMapAndMoves(from: input, with: .none)
     map.portals = onePortals() + twoPortals() + threePortals() + fourPortals() + fivePortals() + sixPortals()
 
     map.processPlayer(moves: moves, visualize: false)
@@ -774,34 +744,5 @@ func finalPasswordFor3DCube(with input: String) throws -> Int {
 }
 
 try measure(part: .two) {
-    print("Solution: \(try finalPasswordFor3DCube(with: .input))") // ??
+    print("Solution: \(try finalPasswordFor3DCube(with: .input))") // 129339
 }
-
-//var (map, moves) = try prepareMapAndMoves(from: String.input)
-//map.portals = onePortals() + twoPortals() + threePortals() + fourPortals() + fivePortals() + sixPortals()
-//map.processPlayer(moves: moves/*.flatMap { $0.normalized() }.prefix(500)*/)
-//print(map)
-
-//print("where do you want to go?")
-//while let response = readLine(strippingNewline: true) {
-//    if response == "end" {
-//        break
-//    }
-//
-//    switch response {
-//    case "w": map.processPlayer(move: .moveForward(1))
-//    case "a": map.processPlayer(moves: [.turn(.counterclockwise)])
-//    case "s": map.processPlayer(moves: [.turn(.counterclockwise), .turn(.counterclockwise)])
-//    case "d": map.processPlayer(moves: [.turn(.clockwise)])
-//    default:
-//        do {
-//            let move = try moveParser.parse(response)
-//            map.processPlayer(move: move)
-//
-//        } catch {
-//            print("invalid input")
-//        }
-//    }
-//
-//    print(map.description)
-//}
