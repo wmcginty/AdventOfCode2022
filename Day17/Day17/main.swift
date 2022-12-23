@@ -94,7 +94,7 @@ class Chamber {
             return Coordinate(x: x, y: y)
         }
 
-        return points.map { $0.moved(in: .down, amount: -maxY) }
+        return points.map { $0.moved(in: .south, amount: -maxY) }
     }
 }
 
@@ -155,8 +155,8 @@ class Tetris {
         var piece = nextPiece()
 
         piece = piece
-            .moved(to: .up, amount: chamber.accumulatedHeight + 2 + piece.height)
-            .moved(to: .right, amount: 2)
+            .moved(to: .north, amount: chamber.accumulatedHeight + 2 + piece.height)
+            .moved(to: .east, amount: 2)
 
         var fallen = false
         while !fallen {
@@ -168,7 +168,7 @@ class Tetris {
             }
 
             // gravity
-            let afterGravity = piece.moved(to: .down, amount: 1)
+            let afterGravity = piece.moved(to: .south, amount: 1)
             if chamber.isPlacementPossible(for: afterGravity) {
                 piece = afterGravity
             } else {
@@ -181,7 +181,7 @@ class Tetris {
 
     private func nextJet() -> Coordinate.Direction {
         defer { jetIndex = (jetIndex + 1) % jets.count }
-        return jets[jetIndex] == .left ? .left : .right
+        return jets[jetIndex] == .left ? .west : .east
     }
 
     private func nextPiece() -> Piece {

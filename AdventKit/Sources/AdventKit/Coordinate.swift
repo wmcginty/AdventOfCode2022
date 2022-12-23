@@ -11,7 +11,7 @@ public struct Coordinate: Hashable, CustomStringConvertible {
 
     // MARK: - Coordinate.Direction
     public enum Direction: CaseIterable {
-        case up, down, left, right
+        case north, northEast, east, southEast, south, southWest, west, northWest
     }
 
     // MARK: - Properties
@@ -36,10 +36,14 @@ public extension Coordinate {
 
     func moved(in direction: Direction, amount: Int) -> Coordinate {
         switch direction {
-        case .up: return Coordinate(x: x, y: y - amount)
-        case .left: return Coordinate(x: x - amount, y: y)
-        case .right: return Coordinate(x: x + amount, y: y)
-        case .down: return Coordinate(x: x, y: y + amount)
+        case .north: return Coordinate(x: x, y: y - amount)
+        case .northEast: return Coordinate(x: x + amount, y: y - amount)
+        case .east: return Coordinate(x: x + amount, y: y)
+        case .southEast: return Coordinate(x: x + amount, y: y + amount)
+        case .south: return Coordinate(x: x, y: y + amount)
+        case .southWest: return Coordinate(x: x - amount, y: y + amount)
+        case .west: return Coordinate(x: x - amount, y: y)
+        case .northWest: return Coordinate(x: x - amount, y: y - amount)
         }
     }
 
@@ -60,10 +64,14 @@ public extension Coordinate {
 
     func neighbor(in direction: Direction) -> Coordinate {
         switch direction {
-        case .up: return .init(x: x, y: y - 1)
-        case .down: return .init(x: x, y: y + 1)
-        case .left: return .init(x: x - 1, y: y)
-        case .right: return .init(x: x + 1, y: y)
+        case .north: return Coordinate(x: x, y: y - 1)
+        case .northEast: return Coordinate(x: x + 1, y: y - 1)
+        case .east: return Coordinate(x: x + 1, y: y)
+        case .southEast: return Coordinate(x: x + 1, y: y + 1)
+        case .south: return Coordinate(x: x, y: y + 1)
+        case .southWest: return Coordinate(x: x - 1, y: y + 1)
+        case .west: return Coordinate(x: x - 1, y: y)
+        case .northWest: return Coordinate(x: x - 1, y: y - 1)
         }
     }
 
