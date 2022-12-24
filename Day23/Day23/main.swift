@@ -40,10 +40,9 @@ struct Grid: CustomStringConvertible {
     }
 
     // MARK: - Properties
-    var elfCoordinates: Set<Coordinate>
-
-    var rounds: Int = 0
-    var rotatingMoveProposalOrder: [ProposedMove] = [.north, .south, .west, .east]
+    private var elfCoordinates: Set<Coordinate>
+    private var rotatingMoveProposalOrder: [ProposedMove] = [.north, .south, .west, .east]
+    private(set) var rounds: Int = 0
 
     // MARK: - Initializer
     init(elements: [[Content]]) {
@@ -182,7 +181,7 @@ func prepareGrid(from input: String) -> Grid {
 // MARK: - Part 1
 func groundTilesInSmallestRectangleContainingAllElvesAfter(rounds: Int, from input: String) throws -> Int {
     var grid = prepareGrid(from: input)
-    grid.performRounds(10, visualize: true)
+    grid.performRounds(10, visualize: false)
     let smallestRectangle = grid.smallestRectangleContainingAllElves
 
     return smallestRectangle.filter { grid.element(at: $0) == .ground }.count

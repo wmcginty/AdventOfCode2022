@@ -12,6 +12,8 @@ public struct Coordinate: Hashable, CustomStringConvertible {
     // MARK: - Coordinate.Direction
     public enum Direction: CaseIterable {
         case north, northEast, east, southEast, south, southWest, west, northWest
+
+        static let cardinal: [Direction] = [.north, .south, .east, .west]
     }
 
     // MARK: - Properties
