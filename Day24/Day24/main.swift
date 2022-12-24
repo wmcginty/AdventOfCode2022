@@ -57,6 +57,7 @@ struct Valley: Hashable, CustomStringConvertible {
     let elements: [[Content]]
     let blizzards: Set<Blizzard>
     let player: Coordinate
+    let startPosition: Coordinate
     let endPosition: Coordinate
 
     // MARK: - Initializer
@@ -68,17 +69,22 @@ struct Valley: Hashable, CustomStringConvertible {
         let endX = elements[elements.count - 1].lastIndex(of: .floor)!
 
         self.player = .init(x: startX, y: 0)
+        self.startPosition = .init(x: startX, y: 0)
         self.endPosition = .init(x: endX, y: elements.count - 1)
     }
 
-    init(elements: [[Content]], blizzards: Set<Blizzard>, player: Coordinate, endPosition: Coordinate) {
+    init(elements: [[Content]], blizzards: Set<Blizzard>, player: Coordinate, startPosition: Coordinate, endPosition: Coordinate) {
         self.blizzards = blizzards
         self.elements = elements
         self.player = player
+        self.startPosition = startPosition
         self.endPosition = endPosition
     }
 
     // MARK: - Interface
+    var width: Int { return elements[0].count - 2 }
+    var height: Int { return elements.count - 2 }
+
     func element(at coordinate: Coordinate) -> Content {
         return elements[coordinate.y][coordinate.x]
     }
@@ -114,7 +120,7 @@ struct Valley: Hashable, CustomStringConvertible {
             updatedBlizzards.insert(blizzard)
         }
 
-        return Valley(elements: elements, blizzards: updatedBlizzards, player: player, endPosition: endPosition)
+        return Valley(elements: elements, blizzards: updatedBlizzards, player: player, startPosition: startPosition, endPosition: endPosition)
     }
 
     // MARK: - CustomStringConvertible
@@ -144,10 +150,11 @@ struct Valley: Hashable, CustomStringConvertible {
 class Solver {
 
     struct State: Hashable {
-//        var valley: Valley
         var player: Coordinate
+        var startPosition: Coordinate
         var endPosition: Coordinate
-        var stepsTaken: Int
+        var trips: Int
+        var time: Int
     }
 
     let startingValleyState: Valley
@@ -156,88 +163,89 @@ class Solver {
 
     init(startingValleyState: Valley) {
         self.startingValleyState = startingValleyState
-        self.possibleBlizzardStates = (startingValleyState.elements.count - 1).lcm(with: (startingValleyState.elements[0].count - 1))
+        self.possibleBlizzardStates = (startingValleyState.width).lcm(with: startingValleyState.height)
+
+        precomputeBlizzardStates()
+        print("done precomputing blizzard states")
     }
 
-    func updateBlizzards(after state: State) -> Set<Valley.Blizzard> {
-        // The blizzards repeat themselves after LCM(w, h) moves
-        print("lcm: \(possibleBlizzardStates)")
-        let updatedTime = (state.stepsTaken + 1) % possibleBlizzardStates
+    func precomputeBlizzardStates() {
+        var valley = startingValleyState
+        blizzardStateCache[0] = valley.blizzards
 
-        if let blizzards = blizzardStateCache[updatedTime] {
-            return blizzards
+        for i in 1..<possibleBlizzardStates {
+            valley = valley.movingBlizzards()
+            blizzardStateCache[i] = valley.blizzards
         }
-
-        let updated = state.valley.movingBlizzards().blizzards
-        blizzardStateCache[updatedTime] = updated
-
-        return updated
     }
 
-    func minimumStepsToEndPosition() -> Int {
+    func blizzardState(for time: Int) -> Set<Valley.Blizzard> {
+        return blizzardStateCache[time % possibleBlizzardStates]!
+    }
+
+    func minimumStepsAcrossValley(times: Int = 1) -> Int {
         var best = Int.max
-        let start = State(valley: startingValleyState, stepsTaken: 0)
+        let start = State(player: startingValleyState.player, startPosition: startingValleyState.startPosition, endPosition: startingValleyState.endPosition, trips: 0, time: 0)
         var deque = Deque([start])
+
+        let maxY = startingValleyState.elements.count
+        let maxX = startingValleyState.elements[0].count
 
         var seen = Set<State>()
         while let state = deque.popFirst() {
             // If we've reached the end position (and we assume we haven't broken any rules) we're done
-            if state.valley.player.coordinate == state.valley.endPosition {
-                best = min(best, state.stepsTaken)
-                print("Best: \(best)")
+            if state.player == state.endPosition && state.trips == times - 1 {
+                best = min(best, state.time)
                 continue
             }
 
-            if seen.contains(state) {
+            if seen.contains(state) || state.time > best {
                 continue
             }
+
             seen.insert(state)
 
-            if state.valley.player.coordinate != state.valley.endPosition && state.stepsTaken > best {
+            if state.player == state.endPosition && state.trips < times {
+                print("trip done after \(state.time)")
+                deque.append(.init(player: state.player, startPosition: state.endPosition, endPosition: state.startPosition, trips: state.trips + 1, time: state.time))
                 continue
             }
 
-            let updatedValley = Valley(elements: state.valley.elements, blizzards: updateBlizzards(after: state), player: state.valley.player, endPosition: state.valley.endPosition)
-
-            if !updatedValley.blizzards.contains(where: { $0.coordinate == updatedValley.player.coordinate }) {
+            let blizzardState = blizzardState(for: state.time)
+            if !blizzardState.contains(where: { $0.coordinate == state.player }) {
                 // if we wait here, we don't get hit by a blizzard. this is viable
-                deque.append(.init(valley: updatedValley, stepsTaken: state.stepsTaken + 1))
+                deque.append(.init(player: state.player, startPosition: state.startPosition, endPosition: state.endPosition, trips: state.trips, time: state.time + 1))
             }
 
             var availableDirections: [Coordinate.Direction] = []
-            if updatedValley.player.coordinate.y > 0 {
+            if state.player.y > 0 {
                 availableDirections.append(.north)
             }
 
-            if updatedValley.player.coordinate.y < updatedValley.elements.count {
+            if state.player.y < maxY - 1 {
                 availableDirections.append(.south)
             }
 
-            if updatedValley.player.coordinate.x > 0 {
+            if state.player.x > 0 {
                 availableDirections.append(.west)
             }
 
-            if updatedValley.player.coordinate.x < updatedValley.elements[0].count {
+            if state.player.x < maxX - 1 {
                 availableDirections.append(.east)
             }
 
             for direction in availableDirections {
-                let moved = updatedValley.player.coordinate.moved(in: direction, amount: 1)
-                if !updatedValley.blizzards.contains(where: { $0.coordinate == moved }) && updatedValley.element(at: moved) != .wall {
+                let moved = state.player.moved(in: direction, amount: 1)
+                if !blizzardState.contains(where: { $0.coordinate == moved }) && startingValleyState.element(at: moved) != .wall {
                     // if we move 1 in <direction>, we don't get hit by a blizzard. this is viable.
-                    deque.append(.init(valley: .init(elements: updatedValley.elements, blizzards: updatedValley.blizzards,
-                                                     player: .init(coordinate: moved), endPosition: updatedValley.endPosition),
-                                       stepsTaken: state.stepsTaken + 1))
+                    deque.append(.init(player: moved, startPosition: state.startPosition, endPosition: state.endPosition, trips: state.trips, time: state.time + 1))
                 }
             }
         }
 
-        print(blizzardStateCache.count)
-        return best
+        return best - 1
     }
 }
-
-
 
 func prepareGrid(from input: String) -> ([[Valley.Content]], Set<Valley.Blizzard>) {
     var blizzards: Set<Valley.Blizzard> = []
@@ -263,22 +271,33 @@ func part1(from input: String) throws -> Int {
     let valley = Valley(elements: gridContents, blizzards: blizzards)
 
     let solver = Solver(startingValleyState: valley)
-    return solver.minimumStepsToEndPosition()
+    return solver.minimumStepsAcrossValley()
 }
-
 
 try measure(part: .one) {
-    print("Solution: \(try part1(from: .input))") //334, 150s
+    print("Solution: \(try part1(from: .input))") //334, 30s
 }
 
-// MARK: - Part 2
-func part2(from input: String) throws -> Int {
-    return 0
-}
-
-try measure(part: .two) {
-    print("Solution: \(try part2(from: .input))")
-}
+//// MARK: - Part 2
+//func part2(from input: String) throws -> Int {
+//    let (gridContents, blizzards) = prepareGrid(from: input)
+//    let valley = Valley(elements: gridContents, blizzards: blizzards)
+//
+//    let solver = Solver(startingValleyState: valley)
+//    let trip1 = solver.minimumStepsAcrossValley()
+//
+//    let backSolver = Solver(startingValleyState: .init(elements: valley.elements, blizzards: solver.blizzardState(for: trip1), player: valley.endPosition, startPosition: valley.endPosition, endPosition: valley.startPosition))
+//    let trip2 = backSolver.minimumStepsAcrossValley()
+//
+//    let forwardSolver = Solver(startingValleyState: .init(elements: valley.elements, blizzards: solver.blizzardState(for: trip1 + trip2), player: valley.startPosition, startPosition: valley.startPosition, endPosition: valley.endPosition))
+//    let trip3 = forwardSolver.minimumStepsAcrossValley()
+//
+//    return trip1 + trip2 + trip3
+//}
+//
+//try measure(part: .two) {
+//    print("Solution: \(try part2(from: .input))")
+//}
 
 // While I'm not thrilled with my implementation, I'm pleased that I had the right approach from the outset. In short, precompute the locations of the blizzards for times up to some reasonable value (1000). Th
 
