@@ -10,6 +10,7 @@
 		0E160DA729580FA400A2EC22 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E160DA629580FA400A2EC22 /* main.swift */; };
 		0E160DAE29580FA900A2EC22 /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E160DAD29580FA900A2EC22 /* Input.swift */; };
 		0E160DBA29580FF500A2EC22 /* AdventKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0E160DB929580FF500A2EC22 /* AdventKit */; };
+		0E160DBD295819ED00A2EC22 /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 0E160DBC295819ED00A2EC22 /* Algorithms */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,6 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E160DBD295819ED00A2EC22 /* Algorithms in Frameworks */,
 				0E160DBA29580FF500A2EC22 /* AdventKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,6 +95,7 @@
 			name = Day25;
 			packageProductDependencies = (
 				0E160DB929580FF500A2EC22 /* AdventKit */,
+				0E160DBC295819ED00A2EC22 /* Algorithms */,
 			);
 			productName = Day25;
 			productReference = 0E160DA329580FA400A2EC22 /* Day25 */;
@@ -123,6 +126,7 @@
 			);
 			mainGroup = 0E160D9A29580FA300A2EC22;
 			packageReferences = (
+				0E160DBB295819ED00A2EC22 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 			);
 			productRefGroup = 0E160DA429580FA400A2EC22 /* Products */;
 			projectDirPath = "";
@@ -300,10 +304,26 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		0E160DBB295819ED00A2EC22 /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		0E160DB929580FF500A2EC22 /* AdventKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AdventKit;
+		};
+		0E160DBC295819ED00A2EC22 /* Algorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0E160DBB295819ED00A2EC22 /* XCRemoteSwiftPackageReference "swift-algorithms" */;
+			productName = Algorithms;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

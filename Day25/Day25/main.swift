@@ -7,6 +7,7 @@
 
 import Foundation
 import AdventKit
+import Algorithms
 
 struct SnafuNumber: CustomStringConvertible {
 
@@ -42,24 +43,19 @@ struct SnafuNumber: CustomStringConvertible {
         var d: [Digit] = []
 
         while num > 0 {
-            switch (((num % 5) + 5) % 5) {
-            case 0: d.insert(.two, at: 0)
+            switch num % 5 {
+            case 0:
+                d.insert(.two, at: 0)
             case 1:
                 d.insert(.three, at: 0)
-                num -= 1
-
             case 2:
                 d.insert(.four, at: 0)
-                num -= 2
-
             case 3:
                 d.insert(.zero, at: 0)
-                num += 2
-
+                num += 5
             case 4:
                 d.insert(.one, at: 0)
-                num += 1
-
+                num += 5
             default: break
             }
 
