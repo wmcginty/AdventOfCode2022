@@ -233,9 +233,18 @@ class Solver {
             }
 
             // If we've seen this state, or we've already past the best time, we can stop
-            if seen.contains(state) || state.time >= best {
+            if seen.contains(state) {
                 continue
             }
+
+            if state.time >= best {
+                continue
+            }
+
+            if state.time + state.player.manhattanDistance(to: state.endPosition) >= best {
+                continue
+            }
+
             seen.insert(state)
 
             // Ask for the blizzards at the NEXT state. We move simultaneously with them, so we want to know where they are going, not where they are now.
